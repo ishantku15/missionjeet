@@ -645,8 +645,7 @@
     const progressHandle = document.getElementById('progress-handle');
     const timeDisplay = document.getElementById('time-display');
     const liveBadge = document.getElementById('live-badge');
-    const speedBtn = document.getElementById('speed-btn');
-    const speedMenu = document.getElementById('speed-menu');
+    const settingsMenu = document.getElementById('settings-menu');
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const playerContainer = document.getElementById('player-container');
     const loadingOverlay = document.getElementById('loading-overlay');
@@ -689,7 +688,7 @@
       controlsTimeout = setTimeout(() => {
         if (!video.paused) {
           document.body.classList.add('hide-controls');
-          speedMenu.classList.remove('show');
+          if (settingsMenu) settingsMenu.classList.remove('show');
         }
       }, 3000);
     }
@@ -761,12 +760,12 @@
       settingsMain.classList.remove('hidden');
       settingsQView.classList.add('hidden');
       settingsSView.classList.add('hidden');
-      speedMenu.classList.toggle('show');
+      settingsMenu.classList.toggle('show');
     });
 
     document.addEventListener('click', (e) => {
-      if (!speedMenu.contains(e.target) && e.target !== settingsBtn) {
-        speedMenu.classList.remove('show');
+      if (!settingsMenu.contains(e.target) && e.target !== settingsBtn) {
+        settingsMenu.classList.remove('show');
       }
     });
 
@@ -802,7 +801,7 @@
         speedLbl.textContent = speed === 1 ? 'Normal' : `${speed}x`;
         document.querySelectorAll('.speed-opt').forEach(i => i.classList.remove('active'));
         item.classList.add('active');
-        speedMenu.classList.remove('show');
+        settingsMenu.classList.remove('show');
       });
     });
 
@@ -999,7 +998,7 @@
         qualityLbl.textContent = 'Auto';
         document.querySelectorAll('#quality-list .settings-item').forEach(i=>i.classList.remove('active'));
         autoDiv.classList.add('active');
-        speedMenu.classList.remove('show');
+        settingsMenu.classList.remove('show');
       };
       qList.appendChild(autoDiv);
 
@@ -1016,7 +1015,7 @@
           qualityLbl.textContent = h + 'p';
           document.querySelectorAll('#quality-list .settings-item').forEach(i=>i.classList.remove('active'));
           div.classList.add('active');
-          speedMenu.classList.remove('show');
+          settingsMenu.classList.remove('show');
         };
         qList.appendChild(div);
       });
