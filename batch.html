@@ -431,6 +431,7 @@
         loadContent(item.entity_id);
       } else {
         // Video or PDF
+        if (typeof enforceAccess === 'function' && !enforceAccess()) return;
         let url = item.data?.file_url;
         
         if(!url) {
@@ -597,6 +598,7 @@
     }
 
     async function playLive(entityId, title) {
+      if (typeof enforceAccess === 'function' && !enforceAccess()) return;
       document.getElementById('fs-loader').classList.remove('hidden');
       try {
         const res = await fetch(`${API}/mj/details?content_id=${entityId}&course_id=${courseId}`);

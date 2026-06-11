@@ -30,8 +30,8 @@
   window.hasAccess = hasAccess;
   window.enforceAccess = enforceAccess;
   
-  // Auto-enforce on all pages except get-access.html
-  if (window.location.pathname.indexOf(ACCESS_PAGE) === -1) {
+  // Auto-enforce ONLY on player.html
+  if (window.location.pathname.indexOf('player.html') !== -1) {
     enforceAccess();
   }
 })();
