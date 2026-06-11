@@ -446,7 +446,9 @@
         }
 
         if(url) {
-          if(url.includes('youtube.com') || url.includes('youtu.be')) {
+          if(item.type === 'notes' || item.type === 'pdf' || url.toLowerCase().includes('.pdf')) {
+             window.open(url, '_blank');
+          } else if(url.includes('youtube.com') || url.includes('youtu.be')) {
              let vid = url.includes('v=') ? new URL(url).searchParams.get('v') : url.split('youtu.be/')[1];
              window.open(`https://m.youtube.com/watch?v=${vid}`, '_blank');
           } else {
