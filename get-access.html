@@ -183,8 +183,8 @@
       
       <div id="timer-display" class="timer">24:00:00</div>
       
-      <button onclick="const ret = localStorage.getItem('auth_return_url'); if(ret) { localStorage.removeItem('auth_return_url'); window.location.href = ret; } else { window.location.href='index.html'; }" class="btn btn-accent mt-4">
-        Enter Multiverse
+      <button id="btn-enter" onclick="const ret = localStorage.getItem('auth_return_url'); if(ret) { localStorage.removeItem('auth_return_url'); window.location.href = ret; } else { window.location.href='index.html'; }" class="btn btn-accent mt-4">
+        Enter Mission JEET
       </button>
     </div>
   </div>
@@ -196,18 +196,18 @@
     let timerInterval;
 
     function init() {
-      // Check for existing valid token
+      // Check URL for code param FIRST so admins can see generated codes even if they have an active session
+      const urlParams = new URLSearchParams(window.location.search);
+      const codeParam = urlParams.get('code');
+      const autoVerify = urlParams.get('auto_verify');
+
+      // Check for existing valid token if no code is in URL
       const expiry = localStorage.getItem(ACCESS_KEY);
-      if (expiry && parseInt(expiry, 10) > Date.now()) {
+      if (expiry && parseInt(expiry, 10) > Date.now() && !codeParam) {
         showStep(3);
         startTimer(parseInt(expiry, 10));
         return;
       }
-
-      // Check URL for code param
-      const urlParams = new URLSearchParams(window.location.search);
-      const codeParam = urlParams.get('code');
-      const autoVerify = urlParams.get('auto_verify');
       
       if (codeParam) {
         document.getElementById('code-input').value = codeParam;
@@ -218,19 +218,18 @@
             return;
         }
         
-        // Attempt to auto-redirect back to the app
-        window.location.href = `intent://auth?code=${codeParam}#Intent;scheme=pwapp;package=com.pw.app;end;`;
+        // Attempt to auto-redirect back to the app, but don't break the web flow
+        if (/android/i.test(navigator.userAgent)) {
+            window.location.href = `intent://auth?code=${codeParam}#Intent;scheme=pwapp;package=com.pw.app;end;`;
+        }
         
         // Emphasize copying the code in case redirect fails
         document.getElementById('main-title').textContent = 'Your Access Code';
-        document.getElementById('main-subtitle').textContent = 'Copy this code and return to the app to activate it.';
-        document.getElementById('btn-copy').style.display = 'flex';
-        document.getElementById('btn-open-app').style.display = 'flex';
+        document.getElementById('main-subtitle').textContent = 'Tap the code to copy it, or click Verify & Activate to unlock the site.';
+        document.getElementById('btn-copy').style.display = 'none'; // Built into the input now
+        document.getElementById('btn-open-app').style.display = 'flex'; // Show return to app button
         
-        // Hide generation UI
-        document.getElementById('btn-generate').style.display = 'none';
-        document.getElementById('divider').style.display = 'none';
-        document.getElementById('btn-verify').style.display = 'none';
+        // DO NOT hide btn-generate, divider, or btn-verify so web users can still use the page
         
         showStep(1);
       }
@@ -333,6 +332,17 @@
       
       showStep(3);
       startTimer(expiry);
+
+      // Auto-redirect after 1.5 seconds so they don't even have to click
+      setTimeout(() => {
+        const ret = localStorage.getItem('auth_return_url');
+        if (ret) {
+          localStorage.removeItem('auth_return_url');
+          window.location.href = ret;
+        } else {
+          window.location.href = 'index.html';
+        }
+      }, 1500);
     }
 
     function startTimer(expiryTime) {
