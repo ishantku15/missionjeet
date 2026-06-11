@@ -281,8 +281,8 @@
       cursor: pointer;
     }
 
-    /* Settings Menu */
-    .settings-menu {
+    /* Settings Menu Update */
+    .settings-panel {
       position: absolute;
       bottom: 80px;
       right: 20px;
@@ -291,23 +291,30 @@
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 12px;
       padding: 12px 0;
-      min-width: 160px;
+      min-width: 200px;
       display: none;
       z-index: 25;
+      color: white;
     }
     
-    .settings-menu.show {
+    .settings-panel.show {
       display: block;
       animation: fadeUp 0.2s ease;
     }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .settings-header {
+      padding: 0 16px 12px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     .settings-item {
-      padding: 10px 20px;
+      padding: 12px 20px;
       cursor: pointer;
       font-size: 0.9rem;
       color: rgba(255,255,255,0.9);
@@ -323,6 +330,133 @@
     .settings-item.active {
       color: #06b6d4;
       font-weight: 600;
+    }
+
+    /* Volume Slider */
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .volume-slider {
+      width: 0;
+      opacity: 0;
+      transition: width 0.3s, opacity 0.3s;
+      -webkit-appearance: none;
+      background: rgba(255,255,255,0.2);
+      height: 4px;
+      border-radius: 2px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+    }
+
+    .volume-container:hover .volume-slider,
+    .volume-slider:focus {
+      width: 80px;
+      opacity: 1;
+    }
+
+    /* Double Tap Zones */
+    .tap-zone {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 30%;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #tap-left { left: 0; }
+    #tap-right { right: 0; }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(0);
+      animation: ripple 0.6s linear;
+      pointer-events: none;
+    }
+
+    @keyframes ripple {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    .tap-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      background: rgba(0,0,0,0.5);
+      padding: 12px 20px;
+      border-radius: 50px;
+      backdrop-filter: blur(4px);
+    }
+
+    .tap-indicator.show {
+      opacity: 1;
+      animation: pop 0.3s ease;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.8); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    /* Lock Screen */
+    #lock-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      display: none;
+    }
+    
+    #lock-overlay.active {
+      display: block;
+    }
+
+    #unlock-btn {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    #lock-overlay.active:active #unlock-btn,
+    #lock-overlay.active:hover #unlock-btn {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     /* Utilities */
@@ -346,6 +480,22 @@
   <div id="player-container">
     <video id="video-element" playsinline></video>
     <div id="youtube-container"></div>
+    
+    <!-- Tap Zones for Mobile Seek -->
+    <div id="tap-left" class="tap-zone">
+      <div id="tap-ind-left" class="tap-indicator"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>10s</div>
+    </div>
+    <div id="tap-right" class="tap-zone">
+      <div id="tap-ind-right" class="tap-indicator"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>10s</div>
+    </div>
+
+    <!-- Lock Screen Overlay -->
+    <div id="lock-overlay">
+      <button id="unlock-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        Tap to Unlock
+      </button>
+    </div>
     
     <!-- Controls Overlay -->
     <div id="controls-overlay">
@@ -376,13 +526,16 @@
             <span style="font-size: 8px; position: absolute; margin-top: 2px;">10</span>
           </button>
 
-          <button id="mute-btn" class="control-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path id="vol-waves" d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-              <line id="mute-line" x1="1" y1="1" x2="23" y2="23" class="hidden"></line>
-            </svg>
-          </button>
+          <div class="volume-container">
+            <button id="mute-btn" class="control-btn" title="Mute">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path id="vol-waves" d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <line id="mute-line" x1="1" y1="1" x2="23" y2="23" class="hidden"></line>
+              </svg>
+            </button>
+            <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.05" value="1">
+          </div>
 
           <div id="time-display" class="time-display">00:00 / 00:00</div>
           
@@ -392,9 +545,19 @@
         </div>
 
         <div class="controls-right">
-          <button id="speed-btn" class="control-btn" title="Playback Speed" style="font-weight: bold; font-size: 0.9rem;">1x</button>
+          <button id="lock-btn" class="control-btn" title="Lock Screen">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </button>
+
+          <button id="pip-btn" class="control-btn" title="Picture in Picture">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="12" y="14" width="7" height="5" rx="1" ry="1"></rect></svg>
+          </button>
+
+          <button id="settings-btn" class="control-btn" title="Settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </button>
           
-          <button id="fullscreen-btn" class="control-btn">
+          <button id="fullscreen-btn" class="control-btn" title="Fullscreen">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
             </svg>
@@ -408,14 +571,44 @@
       </a>
     </div>
     
-    <!-- Speed Menu -->
-    <div id="speed-menu" class="settings-menu">
-      <div class="settings-item" data-speed="0.5">0.5x</div>
-      <div class="settings-item" data-speed="0.75">0.75x</div>
-      <div class="settings-item active" data-speed="1">Normal</div>
-      <div class="settings-item" data-speed="1.25">1.25x</div>
-      <div class="settings-item" data-speed="1.5">1.5x</div>
-      <div class="settings-item" data-speed="2">2.0x</div>
+    <!-- Master Settings Menu -->
+    <div id="settings-menu" class="settings-panel">
+      <!-- Main view -->
+      <div id="settings-main">
+        <div class="settings-item" id="menu-quality">
+          <span style="display:flex; align-items:center; gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg> Quality</span>
+          <span id="quality-lbl" style="color: #06b6d4;">Auto</span>
+        </div>
+        <div class="settings-item" id="menu-speed">
+          <span style="display:flex; align-items:center; gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Speed</span>
+          <span id="speed-lbl" style="color: #06b6d4;">Normal</span>
+        </div>
+      </div>
+      
+      <!-- Quality view -->
+      <div id="settings-quality-view" class="hidden">
+        <div class="settings-header" id="back-to-main-from-q">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Quality
+        </div>
+        <div id="quality-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Speed view -->
+      <div id="settings-speed-view" class="hidden">
+        <div class="settings-header" id="back-to-main-from-s">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Speed
+        </div>
+        <div class="settings-item speed-opt" data-speed="0.5">0.5x</div>
+        <div class="settings-item speed-opt" data-speed="0.75">0.75x</div>
+        <div class="settings-item speed-opt active" data-speed="1">Normal</div>
+        <div class="settings-item speed-opt" data-speed="1.25">1.25x</div>
+        <div class="settings-item speed-opt" data-speed="1.5">1.5x</div>
+        <div class="settings-item speed-opt" data-speed="2">2.0x</div>
+      </div>
     </div>
 
     <!-- Overlays -->
@@ -460,6 +653,20 @@
     const errorOverlay = document.getElementById('error-overlay');
     const errorMsg = document.getElementById('error-msg');
 
+    const volumeSlider = document.getElementById('volume-slider');
+    const lockBtn = document.getElementById('lock-btn');
+    const pipBtn = document.getElementById('pip-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsMain = document.getElementById('settings-main');
+    const settingsQView = document.getElementById('settings-quality-view');
+    const settingsSView = document.getElementById('settings-speed-view');
+    const tapLeft = document.getElementById('tap-left');
+    const tapRight = document.getElementById('tap-right');
+    const lockOverlay = document.getElementById('lock-overlay');
+    const unlockBtn = document.getElementById('unlock-btn');
+    const qualityLbl = document.getElementById('quality-lbl');
+    const speedLbl = document.getElementById('speed-lbl');
+
     let shakaPlayer = null;
     let isLive = false;
     let controlsTimeout;
@@ -476,6 +683,7 @@
 
     // Auto-hide controls
     function resetControlsHide() {
+      if (document.body.classList.contains('locked')) return;
       document.body.classList.remove('hide-controls');
       clearTimeout(controlsTimeout);
       controlsTimeout = setTimeout(() => {
@@ -547,41 +755,149 @@
       video.currentTime = pos * video.duration;
     });
 
-    // Speed Menu
-    speedBtn.addEventListener('click', (e) => {
+    // Settings Routing
+    settingsBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      settingsMain.classList.remove('hidden');
+      settingsQView.classList.add('hidden');
+      settingsSView.classList.add('hidden');
       speedMenu.classList.toggle('show');
     });
 
-    document.addEventListener('click', () => speedMenu.classList.remove('show'));
+    document.addEventListener('click', (e) => {
+      if (!speedMenu.contains(e.target) && e.target !== settingsBtn) {
+        speedMenu.classList.remove('show');
+      }
+    });
 
-    document.querySelectorAll('.settings-item').forEach(item => {
-      item.addEventListener('click', () => {
+    document.getElementById('menu-quality').addEventListener('click', (e) => {
+      e.stopPropagation();
+      settingsMain.classList.add('hidden');
+      settingsQView.classList.remove('hidden');
+    });
+
+    document.getElementById('menu-speed').addEventListener('click', (e) => {
+      e.stopPropagation();
+      settingsMain.classList.add('hidden');
+      settingsSView.classList.remove('hidden');
+    });
+
+    document.getElementById('back-to-main-from-q').addEventListener('click', (e) => {
+      e.stopPropagation();
+      settingsQView.classList.add('hidden');
+      settingsMain.classList.remove('hidden');
+    });
+
+    document.getElementById('back-to-main-from-s').addEventListener('click', (e) => {
+      e.stopPropagation();
+      settingsSView.classList.add('hidden');
+      settingsMain.classList.remove('hidden');
+    });
+
+    document.querySelectorAll('.speed-opt').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
         const speed = parseFloat(item.dataset.speed);
         video.playbackRate = speed;
-        speedBtn.textContent = speed === 1 ? '1x' : `${speed}x`;
-        document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('active'));
+        speedLbl.textContent = speed === 1 ? 'Normal' : `${speed}x`;
+        document.querySelectorAll('.speed-opt').forEach(i => i.classList.remove('active'));
         item.classList.add('active');
+        speedMenu.classList.remove('show');
       });
     });
 
-    // Fullscreen
-    fullscreenBtn.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        playerContainer.requestFullscreen().catch(err => {
-          console.error("Error attempting to enable full-screen mode:", err.message);
-        });
-        // Try landscape lock on mobile
+    // Volume Slider
+    volumeSlider.addEventListener('input', (e) => {
+      video.volume = e.target.value;
+      if (video.volume === 0) video.muted = true;
+      else video.muted = false;
+      updateMuteUI();
+    });
+
+    // Double Tap to Seek
+    function showRipple(zone) {
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple';
+      ripple.style.width = '100px';
+      ripple.style.height = '100px';
+      zone.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }
+
+    let tapLeftTime = 0;
+    tapLeft.addEventListener('click', () => {
+      const now = Date.now();
+      if (now - tapLeftTime < 300) {
+        video.currentTime -= 10;
+        showRipple(tapLeft);
+        const ind = document.getElementById('tap-ind-left');
+        ind.classList.add('show');
+        setTimeout(() => ind.classList.remove('show'), 500);
+      }
+      tapLeftTime = now;
+    });
+
+    let tapRightTime = 0;
+    tapRight.addEventListener('click', () => {
+      const now = Date.now();
+      if (now - tapRightTime < 300) {
+        video.currentTime += 10;
+        showRipple(tapRight);
+        const ind = document.getElementById('tap-ind-right');
+        ind.classList.add('show');
+        setTimeout(() => ind.classList.remove('show'), 500);
+      }
+      tapRightTime = now;
+    });
+
+    // Lock Screen
+    lockBtn.addEventListener('click', () => {
+      document.body.classList.add('locked', 'hide-controls');
+      lockOverlay.classList.add('active');
+    });
+
+    unlockBtn.addEventListener('click', () => {
+      document.body.classList.remove('locked');
+      lockOverlay.classList.remove('active');
+      resetControlsHide();
+    });
+
+    // Picture in Picture
+    pipBtn.addEventListener('click', async () => {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else if (document.pictureInPictureEnabled && !video.disablePictureInPicture) {
+        await video.requestPictureInPicture().catch(console.error);
+      } else {
+        alert("Picture-in-Picture is not supported in your browser.");
+      }
+    });
+
+    // Fullscreen (iOS compatible)
+    function toggleFullscreen() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (playerContainer.requestFullscreen) {
+          playerContainer.requestFullscreen().catch(e=>console.log(e));
+        } else if (playerContainer.webkitRequestFullscreen) {
+          playerContainer.webkitRequestFullscreen();
+        } else if (video.webkitEnterFullscreen) {
+          video.webkitEnterFullscreen(); // iOS native player fallback
+        }
         if(screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('landscape').catch(() => {});
         }
       } else {
-        document.exitFullscreen();
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
         if(screen.orientation && screen.orientation.unlock) {
             screen.orientation.unlock();
         }
       }
-    });
+    }
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
 
     // Keyboard
     document.addEventListener('keydown', (e) => {
@@ -641,6 +957,9 @@
             await shakaPlayer.load(url);
             loadingOverlay.classList.add('hidden');
             video.play().catch(()=>{});
+            
+            // Build Quality Menu
+            buildQualityMenu();
           } else {
             throw new Error("Browser not supported for DRM/HLS.");
           }
@@ -663,6 +982,44 @@
         errorMsg.textContent = err.message || "Failed to load stream.";
       }
       resetControlsHide();
+    }
+    
+    function buildQualityMenu() {
+      if (!shakaPlayer) return;
+      const tracks = shakaPlayer.getVariantTracks();
+      const qList = document.getElementById('quality-list');
+      qList.innerHTML = '';
+      
+      const autoDiv = document.createElement('div');
+      autoDiv.className = 'settings-item active';
+      autoDiv.textContent = 'Auto';
+      autoDiv.onclick = (e) => {
+        e.stopPropagation();
+        shakaPlayer.configure({ abr: { enabled: true } });
+        qualityLbl.textContent = 'Auto';
+        document.querySelectorAll('#quality-list .settings-item').forEach(i=>i.classList.remove('active'));
+        autoDiv.classList.add('active');
+        speedMenu.classList.remove('show');
+      };
+      qList.appendChild(autoDiv);
+
+      const uniqueHeights = [...new Set(tracks.map(t => t.height))].filter(Boolean).sort((a,b)=>b-a);
+      uniqueHeights.forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'settings-item';
+        div.textContent = h + 'p';
+        div.onclick = (e) => {
+          e.stopPropagation();
+          shakaPlayer.configure({ abr: { enabled: false } });
+          const track = shakaPlayer.getVariantTracks().find(t => t.height === h);
+          if(track) shakaPlayer.selectVariantTrack(track, true);
+          qualityLbl.textContent = h + 'p';
+          document.querySelectorAll('#quality-list .settings-item').forEach(i=>i.classList.remove('active'));
+          div.classList.add('active');
+          speedMenu.classList.remove('show');
+        };
+        qList.appendChild(div);
+      });
     }
 
     document.addEventListener('DOMContentLoaded', init);
