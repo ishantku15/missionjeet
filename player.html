@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>As Multiverse — Player</title>
+  <link rel="icon" href="https://nexttoppers.asmultiverse.in/logo.png" />
+  <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.7.11/dist/shaka-player.compiled.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #000;
+      color: #fff;
+      overflow: hidden; /* Fullscreen, no scroll */
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: opacity 0.3s;
+    }
+
+    #back-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(4px);
+      transition: background 0.2s;
+    }
+
+    #back-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    #title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: calc(100vw - 100px);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    #player-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+    }
+
+    #video-element {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    #youtube-container {
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    #youtube-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    #controls-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 40px 20px 20px;
+      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: opacity 0.3s;
+      opacity: 1;
+    }
+    
+    .hide-controls #controls-overlay,
+    .hide-controls #header {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .progress-container {
+      position: relative;
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .progress-buffer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+    }
+
+    .progress-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      border-radius: 3px;
+    }
+
+    .progress-handle {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .progress-container:hover .progress-handle {
+      opacity: 1;
+    }
+
+    .controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .controls-left, .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .control-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+
+    .time-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.5px;
+    }
+
+    .live-badge {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: #ef4444;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #ef4444;
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    /* Overlays */
+    #loading-overlay, #error-overlay {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(59, 130, 246, 0.2);
+      border-top-color: #06b6d4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-icon {
+      color: #ef4444;
+      margin-bottom: 16px;
+    }
+
+    .retry-btn {
+      margin-top: 20px;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      border: none;
+      padding: 10px 24px;
+      color: white;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* Settings Menu */
+    .settings-menu {
+      position: absolute;
+      bottom: 80px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px 0;
+      min-width: 160px;
+      display: none;
+      z-index: 25;
+    }
+    
+    .settings-menu.show {
+      display: block;
+      animation: fadeUp 0.2s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .settings-item {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .settings-item:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .settings-item.active {
+      color: #06b6d4;
+      font-weight: 600;
+    }
+
+    /* Utilities */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div id="header">
+    <button id="back-btn" onclick="history.back()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </button>
+    <div id="title">Loading Video...</div>
+  </div>
+
+  <!-- Player Area -->
+  <div id="player-container">
+    <video id="video-element" playsinline></video>
+    <div id="youtube-container"></div>
+    
+    <!-- Controls Overlay -->
+    <div id="controls-overlay">
+      <!-- Progress Bar -->
+      <div id="progress-container" class="progress-container">
+        <div id="progress-buffer" class="progress-buffer" style="width: 0%"></div>
+        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+        <div id="progress-handle" class="progress-handle" style="left: 0%"></div>
+      </div>
+
+      <!-- Controls Row -->
+      <div class="controls-row">
+        <div class="controls-left">
+          <button id="play-pause-btn" class="control-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path id="play-icon" d="M8 5v14l11-7z" />
+              <path id="pause-icon" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" class="hidden" />
+            </svg>
+          </button>
+          
+          <button id="rewind-btn" class="control-btn" title="Rewind 10s">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l5-5-5-5"></path><path d="M21 11v1a8 8 0 0 1-8 8H3"></path></svg>
+            <span style="font-size: 8px; position: absolute; margin-top: 2px;">10</span>
+          </button>
+
+          <button id="forward-btn" class="control-btn" title="Forward 10s">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11l-5-5 5-5"></path><path d="M3 11v1a8 8 0 0 0 8 8h10"></path></svg>
+            <span style="font-size: 8px; position: absolute; margin-top: 2px;">10</span>
+          </button>
+
+          <button id="mute-btn" class="control-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path id="vol-waves" d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              <line id="mute-line" x1="1" y1="1" x2="23" y2="23" class="hidden"></line>
+            </svg>
+          </button>
+
+          <div id="time-display" class="time-display">00:00 / 00:00</div>
+          
+          <div id="live-badge" class="live-badge hidden">
+            <div class="live-dot"></div> LIVE
+          </div>
+        </div>
+
+        <div class="controls-right">
+          <button id="speed-btn" class="control-btn" title="Playback Speed" style="font-weight: bold; font-size: 0.9rem;">1x</button>
+          
+          <button id="fullscreen-btn" class="control-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Speed Menu -->
+    <div id="speed-menu" class="settings-menu">
+      <div class="settings-item" data-speed="0.5">0.5x</div>
+      <div class="settings-item" data-speed="0.75">0.75x</div>
+      <div class="settings-item active" data-speed="1">Normal</div>
+      <div class="settings-item" data-speed="1.25">1.25x</div>
+      <div class="settings-item" data-speed="1.5">1.5x</div>
+      <div class="settings-item" data-speed="2">2.0x</div>
+    </div>
+
+    <!-- Overlays -->
+    <div id="loading-overlay">
+      <div class="spinner"></div>
+      <p style="margin-top: 16px; color: #06b6d4; font-weight: 500; tracking: 1px;">LOADING STREAM...</p>
+    </div>
+
+    <div id="error-overlay" class="hidden">
+      <svg class="error-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">Playback Error</h2>
+      <p id="error-msg" style="color: #9ca3af; text-align: center; max-width: 80%;">Failed to load video stream.</p>
+      <button class="retry-btn" onclick="location.reload()">Retry</button>
+    </div>
+  </div>
+
+  <script>
+    // Elements
+    const video = document.getElementById('video-element');
+    const youtubeContainer = document.getElementById('youtube-container');
+    const playPauseBtn = document.getElementById('play-pause-btn');
+    const playIcon = document.getElementById('play-icon');
+    const pauseIcon = document.getElementById('pause-icon');
+    const muteBtn = document.getElementById('mute-btn');
+    const volWaves = document.getElementById('vol-waves');
+    const muteLine = document.getElementById('mute-line');
+    const progressContainer = document.getElementById('progress-container');
+    const progressFill = document.getElementById('progress-fill');
+    const progressBuffer = document.getElementById('progress-buffer');
+    const progressHandle = document.getElementById('progress-handle');
+    const timeDisplay = document.getElementById('time-display');
+    const liveBadge = document.getElementById('live-badge');
+    const speedBtn = document.getElementById('speed-btn');
+    const speedMenu = document.getElementById('speed-menu');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const playerContainer = document.getElementById('player-container');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const errorOverlay = document.getElementById('error-overlay');
+    const errorMsg = document.getElementById('error-msg');
+
+    let shakaPlayer = null;
+    let isLive = false;
+    let controlsTimeout;
+
+    // Formatting Time
+    function formatTime(seconds) {
+      if (isNaN(seconds) || seconds === Infinity) return "00:00";
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = Math.floor(seconds % 60);
+      if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // Auto-hide controls
+    function resetControlsHide() {
+      document.body.classList.remove('hide-controls');
+      clearTimeout(controlsTimeout);
+      controlsTimeout = setTimeout(() => {
+        if (!video.paused) {
+          document.body.classList.add('hide-controls');
+          speedMenu.classList.remove('show');
+        }
+      }, 3000);
+    }
+
+    document.addEventListener('mousemove', resetControlsHide);
+    document.addEventListener('touchstart', resetControlsHide);
+
+    // Update UI
+    function updatePlayPauseUI() {
+      if (video.paused) {
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+      } else {
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+      }
+    }
+
+    function updateMuteUI() {
+      if (video.muted) {
+        volWaves.classList.add('hidden');
+        muteLine.classList.remove('hidden');
+      } else {
+        volWaves.classList.remove('hidden');
+        muteLine.classList.add('hidden');
+      }
+    }
+
+    // Events
+    playPauseBtn.addEventListener('click', () => {
+      video.paused ? video.play() : video.pause();
+    });
+
+    video.addEventListener('play', updatePlayPauseUI);
+    video.addEventListener('pause', updatePlayPauseUI);
+
+    muteBtn.addEventListener('click', () => {
+      video.muted = !video.muted;
+      updateMuteUI();
+    });
+
+    document.getElementById('rewind-btn').addEventListener('click', () => { video.currentTime -= 10; });
+    document.getElementById('forward-btn').addEventListener('click', () => { video.currentTime += 10; });
+
+    video.addEventListener('timeupdate', () => {
+      if (isLive) return;
+      const pct = (video.currentTime / video.duration) * 100 || 0;
+      progressFill.style.width = `${pct}%`;
+      progressHandle.style.left = `${pct}%`;
+      timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+      
+      // Buffer
+      if (video.buffered.length > 0) {
+        const buffPct = (video.buffered.end(video.buffered.length - 1) / video.duration) * 100;
+        progressBuffer.style.width = `${buffPct}%`;
+      }
+    });
+
+    progressContainer.addEventListener('click', (e) => {
+      if (isLive) return;
+      const rect = progressContainer.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      video.currentTime = pos * video.duration;
+    });
+
+    // Speed Menu
+    speedBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      speedMenu.classList.toggle('show');
+    });
+
+    document.addEventListener('click', () => speedMenu.classList.remove('show'));
+
+    document.querySelectorAll('.settings-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const speed = parseFloat(item.dataset.speed);
+        video.playbackRate = speed;
+        speedBtn.textContent = speed === 1 ? '1x' : `${speed}x`;
+        document.querySelectorAll('.settings-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+
+    // Fullscreen
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        playerContainer.requestFullscreen().catch(err => {
+          console.error("Error attempting to enable full-screen mode:", err.message);
+        });
+        // Try landscape lock on mobile
+        if(screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+      } else {
+        document.exitFullscreen();
+        if(screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        }
+      }
+    });
+
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') { e.preventDefault(); video.paused ? video.play() : video.pause(); }
+      if (e.code === 'ArrowLeft') { video.currentTime -= 10; resetControlsHide(); }
+      if (e.code === 'ArrowRight') { video.currentTime += 10; resetControlsHide(); }
+      if (e.code === 'KeyF') fullscreenBtn.click();
+      if (e.code === 'KeyM') muteBtn.click();
+    });
+
+    // Init Logic
+    async function init() {
+      const params = new URLSearchParams(location.search);
+      const url = params.get('url');
+      const title = params.get('title') || 'MissionJEET Video';
+      isLive = params.get('live') === '1';
+
+      document.getElementById('title').textContent = title;
+
+      if (isLive) {
+        timeDisplay.classList.add('hidden');
+        progressContainer.classList.add('hidden');
+        liveBadge.classList.remove('hidden');
+      }
+
+      if (!url) {
+        loadingOverlay.classList.add('hidden');
+        errorOverlay.classList.remove('hidden');
+        errorMsg.textContent = "No video URL provided.";
+        return;
+      }
+
+      try {
+        if (/youtube\.com|youtu\.be/.test(url)) {
+          // Embed YouTube
+          loadingOverlay.classList.add('hidden');
+          video.classList.add('hidden');
+          youtubeContainer.style.display = 'block';
+          
+          let videoId = '';
+          if (url.includes('v=')) videoId = new URL(url).searchParams.get('v');
+          else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+          else if (url.includes('embed/')) videoId = url.split('embed/')[1].split('?')[0];
+
+          youtubeContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+          
+        } else if (url.includes('.m3u8') || url.includes('.mpd')) {
+          // Shaka Player
+          shaka.polyfill.installAll();
+          if (shaka.Player.isBrowserSupported()) {
+            shakaPlayer = new shaka.Player(video);
+            shakaPlayer.addEventListener('error', (err) => {
+              console.error('Shaka Error', err);
+              errorOverlay.classList.remove('hidden');
+              errorMsg.textContent = "Error playing secure stream.";
+            });
+            await shakaPlayer.load(url);
+            loadingOverlay.classList.add('hidden');
+            video.play().catch(()=>{});
+          } else {
+            throw new Error("Browser not supported for DRM/HLS.");
+          }
+        } else {
+          // Native
+          video.src = url;
+          video.addEventListener('loadeddata', () => {
+            loadingOverlay.classList.add('hidden');
+            video.play().catch(()=>{});
+          });
+          video.addEventListener('error', () => {
+            loadingOverlay.classList.add('hidden');
+            errorOverlay.classList.remove('hidden');
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        loadingOverlay.classList.add('hidden');
+        errorOverlay.classList.remove('hidden');
+        errorMsg.textContent = err.message || "Failed to load stream.";
+      }
+      resetControlsHide();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

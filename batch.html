@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission JEET — Batch Details</title>
+  <link rel="icon" href="https://i.ibb.co/2YmNq8Hd/empty-state.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+    
+    body {
+      background-color: #0f1117;
+      color: #fff;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    /* Animations */
+    @keyframes lc-pulse-ring { 0% { transform: scale(0.85); opacity: 0.8; } 100% { transform: scale(2.8); opacity: 0; } }
+    @keyframes lc-led-blink { 0%,42%,58%,100% { opacity: 1; } 50% { opacity: 0.15; } }
+    @keyframes lc-sweep { 0% { left: -80%; } 100% { left: 140%; } }
+    @keyframes lc-skel-shimmer { 0% { background-position: -900px 0; } 100% { background-position: 900px 0; } }
+    @keyframes lc-signal-bar { 0%,100% { opacity: 0.25; transform: scaleY(0.45); } 50% { opacity: 1; transform: scaleY(1); } }
+    @keyframes lc-timer-glow { 0%,100% { text-shadow: 0 0 6px rgba(96,165,250,0.5), 0 0 14px rgba(96,165,250,0.2); } 50% { text-shadow: 0 0 12px rgba(96,165,250,0.9), 0 0 28px rgba(96,165,250,0.4); } }
+    @keyframes lc-card-enter { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes lc-dash-move { to { stroke-dashoffset: -20; } }
+    @keyframes lc-tag-enter { from { opacity: 0; transform: translateX(-8px) scale(0.85); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes lc-gentle-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* Custom Classes */
+    .lc-live-dot-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+    .lc-live-dot { width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; z-index: 10; animation: lc-led-blink 2s infinite; }
+    .lc-live-dot::before { content: ''; position: absolute; width: 100%; height: 100%; background-color: #ef4444; border-radius: 50%; z-index: 0; animation: lc-pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+    
+    .lc-sig-bar { width: 3px; background-color: #ef4444; border-radius: 2px; transform-origin: bottom; animation: lc-signal-bar 1.2s infinite ease-in-out; }
+    .lc-sig-bar:nth-child(2) { animation-delay: 0.2s; height: 12px; }
+    .lc-sig-bar:nth-child(3) { animation-delay: 0.4s; height: 16px; }
+    .lc-sig-bar:nth-child(1) { animation-delay: 0.0s; height: 8px; }
+
+    .lc-skel-card { background: #161722; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px; border: 1px solid rgba(255,255,255,0.05); }
+    .lc-skel-thumb { width: 100%; height: 160px; border-radius: 12px; background: linear-gradient(90deg, #1e202e 0%, #2a2d40 50%, #1e202e 100%); background-size: 900px 100%; animation: lc-skel-shimmer 1.5s infinite linear; }
+    .lc-skel-line { height: 16px; border-radius: 8px; background: linear-gradient(90deg, #1e202e 0%, #2a2d40 50%, #1e202e 100%); background-size: 900px 100%; animation: lc-skel-shimmer 1.5s infinite linear; }
+
+    .lc-live-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; color: #fca5a5; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; }
+    .lc-soon-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(59, 130, 246, 0.1); border: 1px dashed rgba(59, 130, 246, 0.5); border-radius: 6px; color: #93c5fd; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; animation: lc-dash-move 1s linear infinite; }
+
+    .lc-timer-digit { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700; color: #60a5fa; background: rgba(59,130,246,0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(59,130,246,0.2); animation: lc-timer-glow 2s infinite; }
+
+    .lc-watch-btn { position: relative; overflow: hidden; background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); transition: all 0.2s; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4); }
+    .lc-watch-btn::after { content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg); animation: lc-sweep 3s infinite; }
+    .lc-watch-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6); }
+
+    .lc-card { background: rgba(22, 23, 34, 0.8); backdrop-filter: blur(12px); border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); animation: lc-card-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; transition: transform 0.2s, border-color 0.2s; }
+    .lc-card:hover { border-color: rgba(59, 130, 246, 0.3); transform: translateY(-2px); }
+
+    .lc-img-blur { position: absolute; inset: -10%; width: 120%; height: 120%; object-fit: cover; filter: blur(20px) brightness(0.4); z-index: 0; }
+    .lc-img-main { position: relative; width: 100%; height: 100%; object-fit: contain; z-index: 1; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    .tab-btn { color: #9ca3af; border-bottom: 2px solid transparent; transition: all 0.2s; padding-bottom: 8px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { color: #06b6d4; border-bottom-color: #06b6d4; }
+    .tab-btn.active-red { color: #ef4444; border-bottom-color: #ef4444; }
+
+    /* Hide scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Header / Top Banner -->
+  <header class="max-w-6xl mx-auto w-full p-4 pt-6">
+    <a href="index.html" class="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Back to Batches
+    </a>
+
+    <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch mb-8">
+      <div class="w-full sm:w-48 md:w-64 aspect-video bg-[#0d0d1a] rounded-2xl overflow-hidden border border-gray-800 shrink-0 shadow-lg">
+        <img id="batch-thumb" src="" alt="Batch" class="w-full h-full object-cover">
+      </div>
+      
+      <div class="flex-1 rounded-2xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20 backdrop-blur p-6 flex flex-col justify-center">
+        <div class="flex items-center gap-3 mb-2">
+          <svg class="text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          <span class="text-cyan-400 text-sm font-bold tracking-widest uppercase">MissionJEET Exclusive</span>
+        </div>
+        <h1 id="batch-title" class="text-2xl md:text-3xl font-bold text-white">Loading Batch...</h1>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-6 border-b border-gray-800 overflow-x-auto mb-8">
+      <button class="tab-btn active" id="tab-overview" onclick="switchTab('overview')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Overview
+      </button>
+      <button class="tab-btn" id="tab-content" onclick="switchTab('content')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Content
+      </button>
+      <button class="tab-btn" id="tab-live" onclick="switchTab('live')">
+        <div class="lc-live-dot-wrap mr-1"><div class="lc-live-dot"></div></div>
+        Live Classes
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-6xl mx-auto w-full p-4 flex-1 pb-20">
+    
+    <!-- OVERVIEW TAB -->
+    <div id="view-overview" class="block animate-[lc-card-enter_0.3s_ease]">
+      <div id="overview-loading" class="flex flex-col items-center justify-center py-20">
+        <div class="w-12 h-12 border-4 border-blue-500/20 border-t-cyan-400 rounded-full animate-spin mb-4"></div>
+        <p class="text-cyan-400 tracking-widest text-sm animate-pulse uppercase">Loading Overview...</p>
+      </div>
+      
+      <div id="overview-content" class="hidden">
+        <div class="bg-[#161722]/80 backdrop-blur-md p-6 md:p-8 rounded-2xl border border-gray-800 shadow-xl">
+          <div class="flex flex-col md:flex-row justify-between items-start gap-6 mb-8 pb-6 border-b border-gray-800">
+            <div>
+              <h2 id="ov-title" class="text-2xl font-bold mb-2"></h2>
+              <div class="flex items-center gap-3">
+                <span id="ov-price" class="text-3xl font-bold text-cyan-400"></span>
+                <span id="ov-mrp" class="text-lg text-gray-500 line-through"></span>
+                <span id="ov-discount" class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-500/30 hidden"></span>
+              </div>
+            </div>
+          </div>
+          <div id="ov-desc" class="prose prose-invert max-w-none prose-a:text-blue-400"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT TAB -->
+    <div id="view-content" class="hidden animate-[lc-card-enter_0.3s_ease]">
+      
+      <!-- Breadcrumbs -->
+      <div class="flex items-center gap-2 mb-6 text-sm text-gray-400 overflow-x-auto pb-2" id="breadcrumbs">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div id="content-loading" class="flex flex-col items-center justify-center py-20 hidden">
+        <div class="w-12 h-12 border-4 border-blue-500/20 border-t-cyan-400 rounded-full animate-spin mb-4"></div>
+        <p class="text-cyan-400 tracking-widest text-sm animate-pulse uppercase">Loading Folder...</p>
+      </div>
+
+      <div id="content-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Folders/Files -->
+      </div>
+      
+      <div id="content-empty" class="hidden flex-col items-center justify-center py-20 text-gray-500">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-4 opacity-50"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <p>No content found in this folder.</p>
+      </div>
+    </div>
+
+    <!-- LIVE TAB -->
+    <div id="view-live" class="hidden animate-[lc-card-enter_0.3s_ease]">
+      <!-- Sub Tabs -->
+      <div class="flex gap-4 mb-8 bg-[#161722] p-1.5 rounded-xl border border-gray-800 w-fit">
+        <button id="subtab-live" onclick="switchLiveTab('live')" class="px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 bg-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)] border border-red-500/30 transition-all">
+          <div class="flex items-end gap-[2px] h-3">
+            <div class="lc-sig-bar"></div><div class="lc-sig-bar"></div><div class="lc-sig-bar"></div>
+          </div>
+          LIVE
+          <span id="badge-live-count" class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-md ml-1 hidden"></span>
+        </button>
+        <button id="subtab-upcoming" onclick="switchLiveTab('upcoming')" class="px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 text-gray-400 hover:text-white transition-all">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          UPCOMING
+          <span id="badge-up-count" class="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-md ml-1 hidden"></span>
+        </button>
+      </div>
+
+      <div id="live-loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="lc-skel-card"><div class="lc-skel-thumb"></div><div class="lc-skel-line w-3/4"></div><div class="lc-skel-line w-1/2"></div></div>
+        <div class="lc-skel-card"><div class="lc-skel-thumb"></div><div class="lc-skel-line w-3/4"></div><div class="lc-skel-line w-1/2"></div></div>
+        <div class="lc-skel-card"><div class="lc-skel-thumb"></div><div class="lc-skel-line w-3/4"></div><div class="lc-skel-line w-1/2"></div></div>
+      </div>
+
+      <div id="live-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+        <!-- Live Cards -->
+      </div>
+
+      <div id="live-empty" class="hidden flex-col items-center justify-center py-20 text-gray-500">
+        <svg style="animation: lc-gentle-bounce 2s infinite;" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-4 text-gray-700"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <p id="live-empty-text">No live classes scheduled.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Fullscreen Loading Overlay -->
+  <div id="fs-loader" class="fixed inset-0 bg-[#0f1117]/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden">
+    <div class="w-16 h-16 border-4 border-blue-500/20 border-t-cyan-400 rounded-full animate-spin mb-6"></div>
+    <p class="text-cyan-400 font-bold tracking-[0.2em] animate-pulse">FETCHING STREAM...</p>
+  </div>
+
+  <script>
+    const API = 'https://missionjeet.modgalaxy.in';
+    
+    const BATCHES = [
+      { id: 185, title: 'Drona 2.0 JEE Class 11th', thumbnail: 'https://dulae92u7241v.cloudfront.net/1772100600/admin_v2/uploads/courses/thumbnail/2967410_131_drona%202.0%20JEE%20banner%20app.png' },
+      { id: 184, title: 'Drona 2.0 NEET Class 11th', thumbnail: 'https://dulae92u7241v.cloudfront.net/1772100600/admin_v2/uploads/courses/thumbnail/241318_131_drona%202.0%20NEET%20banner%20app.png' },
+      { id: 151, title: 'Drona JEE class 11th', thumbnail: 'https://dulae92u7241v.cloudfront.net/1772100600/admin_v2/uploads/courses/thumbnail/7574748_131_Class%2011th%20Mission%20Jeet%20JEE%20App%20Banners.jpg' },
+      { id: 152, title: 'Drona NEET class 11th', thumbnail: 'https://dulae92u7241v.cloudfront.net/1772100600/admin_v2/uploads/courses/thumbnail/4072473_131_Class%2011th%20Mission%20Jeets%20NEET%20App%20Banners.jpg' }
+    ];
+    const FALLBACK = 'https://decicqog4ulhy.cloudfront.net/0/admin_v2/uploads/courses/thumbnail/7524245_1_WhatsApp%20Image%202026-03-02%20at%204.19.45%20PM.jpeg';
+
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get('courseId') || '185';
+    
+    // State
+    let currentTab = 'overview';
+    let liveSubTab = 'live'; // 'live' or 'upcoming'
+    let folderStack = [{ id: '0', name: 'Subjects' }];
+    let contentCache = {}; // folderId -> items
+    let liveDataCache = null; // { live: [], upcoming: [] }
+
+    // Init Banner
+    const batchInfo = BATCHES.find(b => b.id == courseId) || { title: 'MissionJEET Batch', thumbnail: FALLBACK };
+    document.getElementById('batch-title').textContent = batchInfo.title;
+    document.getElementById('batch-thumb').src = batchInfo.thumbnail;
+
+    // Tabs logic
+    function switchTab(tabId) {
+      currentTab = tabId;
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active', 'active-red');
+      });
+      document.querySelectorAll('[id^="view-"]').forEach(v => v.classList.add('hidden'));
+      
+      const btn = document.getElementById(`tab-${tabId}`);
+      if(tabId === 'live') btn.classList.add('active-red');
+      else btn.classList.add('active');
+
+      const view = document.getElementById(`view-${tabId}`);
+      view.classList.remove('hidden');
+      
+      // Re-trigger animation
+      view.style.animation = 'none';
+      view.offsetHeight; 
+      view.style.animation = 'lc-card-enter 0.3s ease forwards';
+
+      if(tabId === 'overview' && !document.getElementById('ov-title').textContent) loadOverview();
+      if(tabId === 'content' && !contentCache['0']) loadContent('0');
+      if(tabId === 'live' && !liveDataCache) loadLive();
+    }
+
+    // OVERVIEW
+    async function loadOverview() {
+      try {
+        const res = await fetch(`${API}/mj/course-details`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_id: courseId })
+        });
+        const json = await res.json();
+        
+        document.getElementById('overview-loading').classList.add('hidden');
+        document.getElementById('overview-content').classList.remove('hidden');
+
+        if(json.success && json.data && json.data.length > 0) {
+          const overviewData = json.data.find(d => d.type === 'overview');
+          if(overviewData && overviewData.data && overviewData.data[0].layout_data) {
+            const details = overviewData.data[0].layout_data[0];
+            
+            document.getElementById('ov-title').textContent = details.title || batchInfo.title;
+            
+            if(details.offer_price) {
+              document.getElementById('ov-price').textContent = `₹${details.offer_price}`;
+            }
+            if(details.mrp && details.mrp > details.offer_price) {
+              document.getElementById('ov-mrp').textContent = `₹${details.mrp}`;
+            }
+            if(details.discount_percentage) {
+              const badge = document.getElementById('ov-discount');
+              badge.textContent = `${details.discount_percentage}% OFF`;
+              badge.classList.remove('hidden');
+            }
+            
+            if(details.description) {
+              document.getElementById('ov-desc').innerHTML = details.description;
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Overview error', err);
+        document.getElementById('overview-loading').innerHTML = '<p class="text-red-400">Failed to load overview.</p>';
+      }
+    }
+
+    // CONTENT
+    function renderBreadcrumbs() {
+      const bc = document.getElementById('breadcrumbs');
+      bc.innerHTML = '';
+      
+      const homeBtn = document.createElement('button');
+      homeBtn.className = 'hover:text-white transition-colors flex items-center gap-1';
+      homeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Subjects';
+      homeBtn.onclick = () => { folderStack = [folderStack[0]]; loadContent('0'); };
+      bc.appendChild(homeBtn);
+
+      for(let i = 1; i < folderStack.length; i++) {
+        const sep = document.createElement('span');
+        sep.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>';
+        sep.className = 'text-gray-600';
+        bc.appendChild(sep);
+
+        const btn = document.createElement('button');
+        btn.className = i === folderStack.length - 1 ? 'text-white font-medium truncate max-w-[150px]' : 'hover:text-white transition-colors truncate max-w-[100px]';
+        btn.textContent = folderStack[i].name;
+        
+        if(i < folderStack.length - 1) {
+          const indexToKeep = i;
+          btn.onclick = () => {
+            folderStack = folderStack.slice(0, indexToKeep + 1);
+            loadContent(folderStack[indexToKeep].id);
+          };
+        }
+        bc.appendChild(btn);
+      }
+    }
+
+    async function loadContent(folderId) {
+      renderBreadcrumbs();
+      
+      const list = document.getElementById('content-list');
+      const loader = document.getElementById('content-loading');
+      const empty = document.getElementById('content-empty');
+      
+      list.innerHTML = '';
+      empty.classList.add('hidden');
+      
+      if(contentCache[folderId]) {
+        renderContentItems(contentCache[folderId]);
+        return;
+      }
+      
+      loader.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`${API}/mj/all-content`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ course_id: courseId, folder_id: folderId })
+        });
+        const json = await res.json();
+        loader.classList.add('hidden');
+
+        if(json.data && json.data.length > 0) {
+          // Sort: Folders first, then videos
+          const items = json.data.sort((a,b) => {
+             if(a.type === 'folder' && b.type !== 'folder') return -1;
+             if(a.type !== 'folder' && b.type === 'folder') return 1;
+             if(a.type === 'video' && b.type !== 'video') return -1;
+             if(a.type !== 'video' && b.type === 'video') return 1;
+             return 0;
+          });
+          contentCache[folderId] = items;
+          renderContentItems(items);
+        } else {
+          empty.classList.remove('hidden');
+        }
+      } catch(err) {
+        console.error(err);
+        loader.classList.add('hidden');
+        empty.classList.remove('hidden');
+        empty.innerHTML = '<p class="text-red-400">Error loading content.</p>';
+      }
+    }
+
+    function renderContentItems(items) {
+      const list = document.getElementById('content-list');
+      
+      items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'bg-[#161722] hover:bg-[#1f202e] p-3 rounded-xl flex items-center gap-4 border border-gray-800 cursor-pointer transition-colors animate-[lc-card-enter_0.3s_ease]';
+        div.style.animationDelay = `${index * 0.05}s`;
+        div.style.animationFillMode = 'both';
+
+        let iconOrThumb = '';
+        if(item.data && item.data.thumbnail) {
+          iconOrThumb = `<img src="${item.data.thumbnail}" class="w-24 h-16 sm:w-28 sm:h-20 rounded-lg object-cover bg-black shrink-0" onerror="this.src='${FALLBACK}'">`;
+        } else {
+          let svg = '';
+          if(item.type === 'folder') svg = '<svg class="text-blue-400" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+          else if(item.type === 'video') svg = '<svg class="text-red-400" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+          else svg = '<svg class="text-cyan-400" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+          
+          iconOrThumb = `<div class="w-24 h-16 sm:w-28 sm:h-20 rounded-lg bg-[#0d0d1a] border border-gray-800 flex items-center justify-center shrink-0">${svg}</div>`;
+        }
+
+        let meta = '';
+        if(item.type === 'folder' && item.data && item.data.content_counts) {
+          meta = `<div class="text-xs text-gray-500 mt-2 flex gap-3">
+            <span class="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> ${item.data.content_counts.videos || 0}</span>
+            <span class="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${item.data.content_counts.pdfs || 0}</span>
+          </div>`;
+        } else if (item.data && item.data.duration) {
+           const mins = Math.floor(item.data.duration / 60);
+           meta = `<div class="text-xs text-gray-400 mt-2 bg-white/5 w-fit px-2 py-0.5 rounded">${mins} mins</div>`;
+        } else if (item.created_at) {
+           const d = new Date(item.created_at);
+           meta = `<div class="text-xs text-gray-500 mt-2">${d.toLocaleDateString()}</div>`;
+        }
+
+        div.innerHTML = `
+          ${iconOrThumb}
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-sm sm:text-base text-gray-100 line-clamp-2">${item.title}</h3>
+            ${meta}
+          </div>
+        `;
+
+        div.onclick = () => handleContentClick(item);
+        list.appendChild(div);
+      });
+    }
+
+    async function handleContentClick(item) {
+      if(item.type === 'folder') {
+        folderStack.push({ id: item.entity_id, name: item.title });
+        loadContent(item.entity_id);
+      } else {
+        // Video or PDF
+        let url = item.data?.file_url;
+        
+        if(!url) {
+          // Need to fetch details
+          document.getElementById('fs-loader').classList.remove('hidden');
+          try {
+            const res = await fetch(`${API}/mj/details?content_id=${item.entity_id}&course_id=${courseId}`);
+            const json = await res.json();
+            if(json.success && json.data) url = json.data.file_url;
+          } catch(e) { console.error(e); }
+          document.getElementById('fs-loader').classList.add('hidden');
+        }
+
+        if(url) {
+          if(url.includes('youtube.com') || url.includes('youtu.be')) {
+             let vid = url.includes('v=') ? new URL(url).searchParams.get('v') : url.split('youtu.be/')[1];
+             window.open(`https://m.youtube.com/watch?v=${vid}`, '_blank');
+          } else {
+             // Go to player
+             window.location.href = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(item.title)}`;
+          }
+        } else {
+          alert('Content URL not available.');
+        }
+      }
+    }
+
+    // LIVE
+    function switchLiveTab(tab) {
+      liveSubTab = tab;
+      
+      const liveBtn = document.getElementById('subtab-live');
+      const upBtn = document.getElementById('subtab-upcoming');
+      
+      if(tab === 'live') {
+        liveBtn.className = 'px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 bg-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)] border border-red-500/30 transition-all';
+        upBtn.className = 'px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 text-gray-400 hover:text-white transition-all';
+      } else {
+        upBtn.className = 'px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 bg-blue-500/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)] border border-blue-500/30 transition-all';
+        liveBtn.className = 'px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 text-gray-400 hover:text-white transition-all';
+      }
+      
+      renderLiveItems();
+    }
+
+    async function loadLive() {
+      const loader = document.getElementById('live-loading');
+      const grid = document.getElementById('live-grid');
+      
+      loader.classList.remove('hidden');
+      grid.classList.add('hidden');
+
+      try {
+        const res = await fetch(`${API}/mj/live?batchid=${courseId}`);
+        const json = await res.json();
+        
+        liveDataCache = { live: [], upcoming: [] };
+        
+        if(json.success && json.data) {
+           json.data.forEach(item => {
+             if(item.is_live == 1) liveDataCache.live.push(item);
+             else liveDataCache.upcoming.push(item);
+           });
+        }
+        
+        // Update badges
+        if(liveDataCache.live.length > 0) {
+          const b = document.getElementById('badge-live-count');
+          b.textContent = liveDataCache.live.length;
+          b.classList.remove('hidden');
+        }
+        if(liveDataCache.upcoming.length > 0) {
+          const b = document.getElementById('badge-up-count');
+          b.textContent = liveDataCache.upcoming.length;
+          b.classList.remove('hidden');
+        }
+
+        // Auto switch to upcoming if no live
+        if(liveDataCache.live.length === 0 && liveDataCache.upcoming.length > 0) {
+          switchLiveTab('upcoming');
+        } else {
+          renderLiveItems();
+        }
+
+      } catch(e) {
+        console.error(e);
+      } finally {
+        loader.classList.add('hidden');
+      }
+    }
+
+    function renderLiveItems() {
+      const grid = document.getElementById('live-grid');
+      const empty = document.getElementById('live-empty');
+      const emptyTxt = document.getElementById('live-empty-text');
+      
+      grid.innerHTML = '';
+      grid.classList.add('hidden');
+      empty.classList.add('hidden');
+
+      const items = liveSubTab === 'live' ? liveDataCache.live : liveDataCache.upcoming;
+
+      if(!items || items.length === 0) {
+        emptyTxt.textContent = liveSubTab === 'live' ? 'No classes are live right now.' : 'No upcoming classes scheduled.';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      grid.classList.remove('hidden');
+
+      items.forEach((item, index) => {
+        const d = new Date(item.created_at);
+        const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const dateStr = d.toLocaleDateString([], {day:'numeric', month:'short'});
+
+        let badge, actionHtml, timeHtml;
+
+        if(liveSubTab === 'live') {
+          badge = `<div class="lc-live-badge absolute top-3 right-3 shadow-lg"><div class="lc-live-dot"></div> LIVE NOW</div>`;
+          timeHtml = `<p class="text-sm text-gray-400 mb-4 flex items-center gap-2"><svg class="text-red-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Started at ${timeStr}</p>`;
+          actionHtml = `<button onclick="playLive('${item.entity_id}', '${item.title.replace(/'/g, "\\'")}')" class="lc-watch-btn w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> WATCH NOW
+          </button>`;
+        } else {
+          badge = `<div class="lc-soon-badge absolute top-3 right-3 shadow-lg bg-[#0f1117]/80 backdrop-blur">UPCOMING</div>`;
+          timeHtml = `<p class="text-sm text-gray-400 mb-4 flex items-center gap-2"><svg class="text-blue-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${dateStr} · ${timeStr}</p>`;
+          
+          // Calculate time left for a cool display
+          let diff = d.getTime() - Date.now();
+          if(diff < 0) diff = 0;
+          const h = Math.floor(diff / (1000 * 60 * 60));
+          const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          actionHtml = `<div class="w-full py-2.5 rounded-xl border border-gray-700 bg-black/30 flex items-center justify-center gap-3">
+            <span class="text-xs text-gray-400">STARTS IN</span>
+            <div class="flex items-center gap-1">
+              <span class="lc-timer-digit">${h.toString().padStart(2, '0')}</span><span class="text-gray-500">:</span><span class="lc-timer-digit">${m.toString().padStart(2, '0')}</span>
+            </div>
+          </div>`;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'lc-card flex flex-col h-full';
+        div.style.animationDelay = `${index * 0.1}s`;
+
+        div.innerHTML = `
+          <div class="relative w-full aspect-video bg-black overflow-hidden border-b border-gray-800">
+            <img src="${item.thumbnail || FALLBACK}" class="lc-img-blur" onerror="this.src='${FALLBACK}'">
+            <img src="${item.thumbnail || FALLBACK}" class="lc-img-main" onerror="this.src='${FALLBACK}'">
+            ${badge}
+          </div>
+          <div class="p-5 flex flex-col flex-1">
+            <div class="bg-white/5 border border-white/10 w-fit px-2 py-0.5 rounded text-[10px] font-bold text-gray-300 uppercase tracking-wider mb-3 line-clamp-1">
+              ${item.course?.title || batchInfo.title}
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2 line-clamp-2 leading-tight flex-1">${item.title}</h3>
+            ${timeHtml}
+            ${actionHtml}
+          </div>
+        `;
+        
+        grid.appendChild(div);
+      });
+    }
+
+    async function playLive(entityId, title) {
+      document.getElementById('fs-loader').classList.remove('hidden');
+      try {
+        const res = await fetch(`${API}/mj/details?content_id=${entityId}&course_id=${courseId}`);
+        const json = await res.json();
+        if(json.success && json.data && json.data.file_url) {
+           window.location.href = `player.html?url=${encodeURIComponent(json.data.file_url)}&title=${encodeURIComponent(title)}&live=1`;
+        } else {
+           alert("Stream URL not found in API response.");
+        }
+      } catch(e) { 
+        console.error(e); 
+        alert("Failed to fetch stream details.");
+      }
+      document.getElementById('fs-loader').classList.add('hidden');
+    }
+
+    // Initialize first tab manually
+    loadOverview();
+
+  </script>
+</body>
+</html>
