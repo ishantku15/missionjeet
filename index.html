@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mission JEET — All Batches</title>
-  <link rel="icon" href="https://i.ibb.co/2YmNq8Hd/empty-state.png" />
+  <title>AS Multiverse — Mission JEET</title>
+  <link rel="icon" href="https://i.postimg.cc/26F5zTH7/4661462-1-Mission-JEET-Logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -348,6 +348,11 @@
       50%      { opacity: 0.4; }
     }
 
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+
     /* ── Scrollbar ─────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: #0f1117; }
@@ -367,7 +372,7 @@
   <div id="app" class="hidden">
     <header class="header">
       <h1><span class="white">Mission</span> <span class="gradient">JEET</span></h1>
-      <p class="subtitle">Jitu Vault Exclusive Batches</p>
+      <p class="subtitle">AS Multiverse Exclusive Batches</p>
     </header>
 
     <div class="grid-wrapper">
@@ -390,8 +395,8 @@
       { id: 152, title: 'Drona NEET class 11th', thumbnail: 'https://dulae92u7241v.cloudfront.net/1772100600/admin_v2/uploads/courses/thumbnail/4072473_131_Class%2011th%20Mission%20Jeets%20NEET%20App%20Banners.jpg' }
     ];
 
-    const FALLBACK_IMG = 'https://i.ibb.co/2YmNq8Hd/empty-state.png';
-    const LS_KEY = 'jitu_vault_enrollments';
+    const FALLBACK_IMG = 'https://i.postimg.cc/26F5zTH7/4661462-1-Mission-JEET-Logo.png';
+    const LS_KEY = 'as_multiverse_enrollments';
     const PER_PAGE = 4;
     let visibleCount = 0;
 
@@ -512,5 +517,10 @@
       }, 500);
     });
   </script>
+
+  <!-- Floating Instagram -->
+  <a href="https://instagram.com/asmultiverse.in" target="_blank" style="position: fixed; bottom: 24px; right: 24px; z-index: 50; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 14px rgba(220, 39, 67, 0.4); transition: transform 0.3s, box-shadow 0.3s; animation: float 3s ease-in-out infinite;" onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 0 20px rgba(220, 39, 67, 0.6)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 14px rgba(220, 39, 67, 0.4)';">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+  </a>
 </body>
 </html>
